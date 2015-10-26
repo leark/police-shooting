@@ -1,5 +1,5 @@
 var map;
-// Function to draw your map
+// Function to draw the map
 var drawMap = function() {
 
   var accessT = "pk.eyJ1IjoibGVhcmsiLCJhIjoiY2lmdTBraXQ3MWU4cXVubHljNm9oOHJzNSJ9.Rt7eRBIErjZ1swddXQMAyw";
@@ -9,20 +9,17 @@ var drawMap = function() {
 
   L.mapbox.accessToken = accessT;
 
+  // Create a map in the div #container
   map = L.mapbox.map('container', 'mapbox.pencil').setView([latitude, longitude], zoom);
-
   
-  // Create a map in the div #map
-  // Create map and set view
-  // Add the layer to your map
-  // Execute your function to get data
-
   getData();
 }
 
-// Function for getting data
+// data is outside for customBuild to access it
 var data;
 
+// Function for getting data
+// calls customBuild when successful
 var getData = function() {
 
   // Execute an AJAX request to get the data in data/response.js
@@ -34,12 +31,11 @@ var getData = function() {
     },
     dataType: "json"
   })
-  // When your request is successful, call your customBuild function
 }
 
-// Loop through your data and add the appropriate layers and points
+// adds layers and points to the map and create the table with data
 var customBuild = function() {
-	// Be sure to add each layer to the map
+
   var Unknown = L.tileLayer()
   var layers = [];
   var layerNames = [];
@@ -50,6 +46,7 @@ var customBuild = function() {
 
   var myIcon = L.divIcon({className: "markers"});
 
+  // looping through the data
   $.each(data, function(i) {
     var report = data[i]; 
 
@@ -71,20 +68,22 @@ var customBuild = function() {
       layer = "Unknown";
     }
 
+    // adding layer to layerNames and layers if it does not exist
     if ($.inArray(layer, layerNames) == -1) {
       layerNames.push(layer);
       layers.push(new L.LayerGroup([]));
     }
     
     var col = "grey";
+    // setting the color of circle to be red if person was killed
     if (report["Hit or Killed?"] == "Killed") {
       col = "red";
     }
 
+    // creating the circle
     var circle = new L.circleMarker([report.lat, report.lng], {color: col, radius: 5});
 
-    //var circle = new L.marker([report.lat, report.lng], {icon: myIcon});
-
+    // creating the text for popup
     var text = "State: " + report.State + "</br>";
     text += "City: " + report.City + "</br>";
     if (report["Victim Name"] != undefined) {
@@ -107,13 +106,16 @@ var customBuild = function() {
     layers[$.inArray(layer, layerNames)].addLayer(circle);
   })
 
-  var overlay = {"Unknown": layers[0]};
-  for (var i = 1; i <= layers.length - 1; i++) {
+  // adding layers to map
+  var overlay = {};
+  for (var i = 0; i <= layers.length - 1; i++) {
+    layers[i].addTo(map);
     overlay[layerNames[i]] = layers[i];
   };
   
-  // Once layers are on the map, add a leaflet controller that shows/hides layers
+  // adding leaflet controller that shows/hides layers
   L.control.layers(null, overlay).addTo(map);
+
 
   var tableData = [["", "Men", "Women"],
                    ["White", whiteMale, whiteFemale], 
@@ -121,6 +123,7 @@ var customBuild = function() {
 
   var table = $("<table>").addClass("table table-striped");
 
+  // creating the data table
   $.each(tableData, function(rowIndex, r) {
     var row = $("<tr>");
     $.each(r, function(colIndex, c) {
@@ -133,9 +136,8 @@ var customBuild = function() {
     table.append(row);
   });
 
-
+  // adding table to html
   $(".content").append(table);
-
 }
 
 
